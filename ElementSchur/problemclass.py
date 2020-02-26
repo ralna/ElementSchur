@@ -27,5 +27,5 @@ class BaseProblem(object):
     def mesh_size(self, u):
         return CellSize(u.ufl_domain())
 
-    def rhs(self, Z):
-        return None
+    def rhs(self):
+        return NotImplementedError

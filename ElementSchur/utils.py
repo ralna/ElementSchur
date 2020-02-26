@@ -5,7 +5,7 @@ def combine_tables(tables, DoF, columns, formatters):
     data_frames = {}
     for name, table_dict in tables.items():
 
-        cols = pd.MultiIndex.from_product([[name], [u'Time', u'Iteration']])
+        cols = pd.MultiIndex.from_product([[name], columns])
         df = pd.DataFrame(data=table_dict)
 
         for col_name, col in df.iteritems():

@@ -2,68 +2,80 @@ import argparse
 from firedrake import *
 import pprint
 
-from ElementSchur import solver, stokes, solver_options, utils
+from ElementSchur import solver, maxwell, solver_options, utils
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'reisz'],
+                    default=['dual', 'primal', 'reisz'],
                     help='Schur complement approximation type (default '
-                    'dual reisz')
+                    'ele reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-nu', '--nu', type=float, default=1,
                     help='Viscosity of the fluid (default 1)')
-parser.add_argument('-d', '--space_dim', type=str, default="2D",
+parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
 parser.add_argument('--plot-sol', type=str, default=False,
                     help='Plot solution (default False)')
 args, _ = parser.parse_known_args()
 
 
-class LDC_problem_2D(stokes.Stokes):
+class Maxwell_2D(maxwell.Maxwell):
 
     def __init__(self, n, nu=1):
-        super(LDC_problem_2D, self).__init__(n, nu)
+        super(Maxwell_2D, self).__init__(n, nu)
+
+    def initial_conditions(self):
+        (x, y) = SpatialCoordinate(self.Z.mesh())
+        self.u0 = curl(exp(x) * cos(y))
+        self.p0 = x * y * cos(x + y)
+        return self.u0, self.p0
 
     def mesh_domain(self):
         mesh = UnitSquareMesh(self.n, self.n)
         return mesh
 
     def nullspace(self, Z):
-        MVSB = MixedVectorSpaceBasis
-        nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
-        return nullspace
+        return None
 
     def bcs(self):
-        bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0)), (4,)),
-               DirichletBC(self.Z.sub(0), Constant((0, 0)), [1, 2, 3])]
+        bcs = [DirichletBC(self.Z.sub(0), self.u0, "on_boundary"),
+               DirichletBC(self.Z.sub(1), self.p0, "on_boundary")]
         return bcs
 
     def rhs(self):
-        return Constant((0., 0.))
+        u0, p0 = self.initial_conditions()
+        f = self.nu * curl(curl(u0)) + grad(p0)
+        return f
 
 
-class LDC_problem_3D(stokes.Stokes):
+class Maxwell_3D(maxwell.Maxwell):
 
     def __init__(self, n, nu=1):
-        super(LDC_problem_3D, self).__init__(n, nu)
+        super(Maxwell_3D, self).__init__(n, nu)
+
+    def initial_conditions(self):
+        (x, y, z) = SpatialCoordinate(self.Z.mesh())
+        self.u0 = curl(as_vector([exp(x) * sin(y), x * z * y, cos(x * y)]))
+        self.p0 = x * y
+        return self.u0, self.p0
 
     def mesh_domain(self):
         mesh = UnitCubeMesh(self.n, self.n, self.n)
         return mesh
 
     def nullspace(self, Z):
-        MVSB = MixedVectorSpaceBasis
-        nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
-        return nullspace
+        return None
 
     def bcs(self):
-        bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0, 0)), (4,)),
-               DirichletBC(self.Z.sub(0), Constant((0, 0, 0)), [1, 2, 3, 5, 6])]
+        bcs = [DirichletBC(self.Z.sub(0), self.u0, "on_boundary"),
+               DirichletBC(self.Z.sub(1), self.p0, "on_boundary")]
         return bcs
 
     def rhs(self):
-        return Constant((0., 0., 0.))
+        u0, p0 = self.initial_conditions()
+        f = self.nu * curl(curl(u0)) + grad(p0)
+        return f
 
 
 schur = args.schur
@@ -75,12 +87,15 @@ plot_sol = args.plot_sol
 formatters = {'Time': '{:5.1f}',
               'Iteration': '{:5.0f}'}
 
-options = solver_options.PETScOptions()
+options = solver_options.PETScOptions(solve_type="direct")
 
 dual_ele = options.dual_ele
 primal_ele = options.primal_ele
-L2_inner = options.L2_inner
+
+Hcurl_inner = options.Hcurl_inner
 H1_inner = options.H1_inner
+
+direct_unassembled = options.direct_unassembled
 
 table_dict = {}
 for name in schur:
@@ -90,27 +105,28 @@ for name in schur:
     boader = "#" * (len(name) + 10)
     indent = " " * 5
     print(f"  {boader}\n  {indent}{name.upper()}\n  {boader}")
-    if name == "reisz":
-        params = options.linear_solve(H1_inner, L2_inner)
-    elif name == "dual":
-        params = options.linear_solve(H1_inner, dual_ele)
-    elif name == "primal":
-        params = options.linear_solve(primal_ele, L2_inner)
 
+    if name == "reisz":
+        params = options.linear_solve(Hcurl_inner, H1_inner)
+    elif name == "dual":
+        params = options.linear_solve(Hcurl_inner, dual_ele)
+    elif name == "primal":
+        params = options.linear_solve(primal_ele, H1_inner)
     pprint.pprint(params)
     for i in range(N):
 
-        n = 2**(i + 1)
-        appctx = {"scale_l2": 1. / nu, "scale_h1_semi": nu}
+        n = 2**(i + 2)
+        appctx = {"scale_Hcurl": nu}
         if space_dim == "2D":
-            problem = LDC_problem_2D(n, nu=nu)
+            problem = Maxwell_2D(n, nu=nu)
         elif space_dim == "3D":
-            problem = LDC_problem_3D(n, nu=nu)
+            problem = Maxwell_3D(n, nu=nu)
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
         s = solver.Solver(problem=problem,
                           params=params,
+                          schur_type=name,
                           appctx=appctx)
         output_dict = s.linear_solve(plot_sol)
         time.append(output_dict["time"])

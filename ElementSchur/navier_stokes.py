@@ -3,7 +3,7 @@ from firedrake import *
 from ElementSchur.problemclass import BaseProblem
 
 
-class Stokes(BaseProblem):
+class NavierStokes(BaseProblem):
 
     def __init__(self, n, nu=1):
         self.n = n
@@ -27,6 +27,7 @@ class Stokes(BaseProblem):
         f = self.rhs()
         a = (
             self.nu * inner(grad(u), grad(v)) * dx
+            + inner(dot(grad(u), u), v) * dx
             - p * div(v) * dx
             - q * div(u) * dx
         )
@@ -37,17 +38,20 @@ class Stokes(BaseProblem):
     def linear_form(self, mesh, schur_type):
         u, p = TrialFunctions(self.Z)
         v, q = TestFunctions(self.Z)
+        u_k = Function(self.V)
         if schur_type == "dual":
             eps = CellSize(mesh)**2
             a = (
-                self.nu * inner(grad(u), grad(v)) * dx
-                + eps * inner(u, v) * dx
+                -self.nu * inner(grad(u), grad(v)) * dx
+                - inner(dot(grad(u), u_k), v) * dx
+                - eps * inner(u, v) * dx
                 - p * div(v) * dx
                 - q * div(u) * dx
             )
         elif schur_type == "primal":
             a = (
                 self.nu * inner(grad(u), grad(v)) * dx
+                + inner(dot(grad(u), u_k), v) * dx
                 - p * div(v) * dx
                 - q * div(u) * dx
                 + inner(q, p) * dx

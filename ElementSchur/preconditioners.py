@@ -20,15 +20,15 @@ class MYPC(PCBase):
         appctx = self.get_appctx(pc)
         test, trial = context.a.arguments()
         appctx["V"] = test.function_space()
-        # state = appctx["state"] if "state" in appctx
-        # velocity_space = appctx["velocity_space"] if "velocity_space" in appctx
-        # u_k = split(state)[velid] if "state" in appctx and "velocity_space" in appctx
+        if "state" in appctx and "velocity_space" in appctx:
+            u_k = split(appctx["state"])[appctx["velocity_space"]]
 
         a = appctx["a"] if "a" in appctx else self.schur_element_blocks(appctx)
-        S = self.schur_assemble(a, appctx)
+        S = self.schur_assemble(appctx)
 
         if not isinstance(S, list):
             S = [S]
+
         self.ksp = []
         bcs = appctx["bcs"] if "bcs" in appctx else context.row_bcs
 
@@ -49,7 +49,7 @@ class MYPC(PCBase):
             ksp.setUp()
             self.ksp.append(ksp)
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         return a
 
     def schur_element_blocks(self, appctx):
@@ -79,8 +79,8 @@ class DualElementSchur(MYPC):
         super(DualElementSchur, self).__init__()
         self.prefix = "dual"
 
-    def schur_assemble(self, a, appctx):
-        AA = Tensor(a)
+    def schur_assemble(self, appctx):
+        AA = Tensor(appctx["a"])
         A = AA.blocks
         return A[1, 0] * A[0, 0].inv * A[0, 1]
 
@@ -91,8 +91,8 @@ class PrimalElementSchur(MYPC):
         super(PrimalElementSchur, self).__init__()
         self.prefix = "primal"
 
-    def schur_assemble(self, a, appctx):
-        AA = Tensor(a)
+    def schur_assemble(self, appctx):
+        AA = Tensor(appctx["a"])
         A = AA.blocks
         return A[0, 0] + A[0, 1] * A[1, 1].inv * A[1, 0]
 
@@ -103,7 +103,7 @@ class PrimalSchurInvElement(MYPC):
         super(PrimalSchurInvElement, self).__init__()
         self.prefix = "primal_dual"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         AA = Tensor(a)
         A = AA.blocks
         return [-A[1, 0] * A[0, 0].inv * A[0, 1], -A[1, 1]]
@@ -115,7 +115,7 @@ class HcurlInner(MYPC):
         super(HcurlInner, self).__init__()
         self.prefix = "hcurl_inner"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         V = appctx["V"]
         scale_Hcurl = appctx["scale_Hcurl"] if "scale_Hcurl" in appctx else 1
 
@@ -131,7 +131,7 @@ class HdivInner(MYPC):
         super(HdivInner, self).__init__()
         self.prefix = "hdiv_inner"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         V = appctx["V"]
         scale_Hdiv = appctx["scale_Hdiv"] if "scale_Hdiv" in appctx else 1
 
@@ -147,7 +147,7 @@ class H1Inner(MYPC):
         super(H1Inner, self).__init__()
         self.prefix = "h1_inner"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         V = appctx["V"]
         scale_l2 = appctx["scale_H1"] if "scale_l2" in appctx else 1
 
@@ -163,12 +163,11 @@ class H1SemiInner(MYPC):
         super(H1SemiInner, self).__init__()
         self.prefix = "h1_semi_inner"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         V = appctx["V"]
         scale = appctx["scale_h1_semi"] if "scale_h1_semi" in appctx else 1
         u = TrialFunction(V)
         v = TestFunction(V)
-        print(scale)
         a = scale * inner(grad(u), grad(v)) * dx
         return a
 
@@ -179,7 +178,7 @@ class L2Inner(MYPC):
         super(L2Inner, self).__init__()
         self.prefix = "l2_inner"
 
-    def schur_assemble(self, a, appctx):
+    def schur_assemble(self, appctx):
         V = appctx["V"]
         scale = appctx["scale_l2"] if "scale_l2" in appctx else 1
 

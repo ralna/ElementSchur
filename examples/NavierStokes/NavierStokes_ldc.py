@@ -2,11 +2,11 @@ import argparse
 from firedrake import *
 import pprint
 
-from ElementSchur import solver, stokes, solver_options, utils
+from ElementSchur import solver, navier_stokes, solver_options, utils
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'reisz'],
+                    default=['dual', 'pcd'],
                     help='Schur complement approximation type (default '
                     'dual reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
@@ -20,7 +20,7 @@ parser.add_argument('--plot-sol', type=str, default=False,
 args, _ = parser.parse_known_args()
 
 
-class LDC_problem_2D(stokes.Stokes):
+class LDC_problem_2D(navier_stokes.NavierStokes):
 
     def __init__(self, n, nu=1):
         super(LDC_problem_2D, self).__init__(n, nu)
@@ -43,27 +43,27 @@ class LDC_problem_2D(stokes.Stokes):
         return Constant((0., 0.))
 
 
-class LDC_problem_3D(stokes.Stokes):
+# class LDC_problem_3D(stokes.Stokes):
 
-    def __init__(self, n, nu=1):
-        super(LDC_problem_3D, self).__init__(n, nu)
+#     def __init__(self, n, nu=1):
+#         super(LDC_problem_3D, self).__init__(n, nu)
 
-    def mesh_domain(self):
-        mesh = UnitCubeMesh(self.n, self.n, self.n)
-        return mesh
+#     def mesh_domain(self):
+#         mesh = UnitCubeMesh(self.n, self.n, self.n)
+#         return mesh
 
-    def nullspace(self, Z):
-        MVSB = MixedVectorSpaceBasis
-        nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
-        return nullspace
+#     def nullspace(self, Z):
+#         MVSB = MixedVectorSpaceBasis
+#         nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
+#         return nullspace
 
-    def bcs(self):
-        bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0, 0)), (4,)),
-               DirichletBC(self.Z.sub(0), Constant((0, 0, 0)), [1, 2, 3, 5, 6])]
-        return bcs
+#     def bcs(self):
+#         bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0, 0)), (4,)),
+#                DirichletBC(self.Z.sub(0), Constant((0, 0, 0)), [1, 2, 3, 5, 6])]
+#         return bcs
 
-    def rhs(self):
-        return Constant((0., 0., 0.))
+#     def rhs(self):
+#         return Constant((0., 0., 0.))
 
 
 schur = args.schur
@@ -73,35 +73,38 @@ space_dim = args.space_dim
 plot_sol = args.plot_sol
 
 formatters = {'Time': '{:5.1f}',
-              'Iteration': '{:5.0f}'}
+              'NL Iteration': '{:5.0f}',
+              'L Iteration': '{:5.1f}'}
 
 options = solver_options.PETScOptions()
 
 dual_ele = options.dual_ele
 primal_ele = options.primal_ele
-L2_inner = options.L2_inner
-H1_inner = options.H1_inner
+pcd = options.pcd
+v_cycle_unassembled = options.v_cycle_unassembled
 
 table_dict = {}
 for name in schur:
-    iterations = []
+    l_iterations = []
+    nl_iterations = []
     time = []
     DoF = []
     boader = "#" * (len(name) + 10)
     indent = " " * 5
     print(f"  {boader}\n  {indent}{name.upper()}\n  {boader}")
-    if name == "reisz":
-        params = options.linear_solve(H1_inner, L2_inner)
+    if name == "pcd":
+        ns_params = options.nonlinear_solve(v_cycle_unassembled, pcd,
+                                            fact_type="full")
     elif name == "dual":
-        params = options.linear_solve(H1_inner, dual_ele)
+        ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele,
+                                            fact_type="full")
     elif name == "primal":
-        params = options.linear_solve(primal_ele, L2_inner)
+        ns_params = options.nonlinear_solve(primal_ele, L2_inner)
 
-    pprint.pprint(params)
+    pprint.pprint(ns_params)
     for i in range(N):
-
-        n = 2**(i + 1)
-        appctx = {"scale_l2": 1. / nu, "scale_h1_semi": nu}
+        n = 2**(i + 3)
+        appctx = {"velocity_space": 0, "nu": nu}
         if space_dim == "2D":
             problem = LDC_problem_2D(n, nu=nu)
         elif space_dim == "3D":
@@ -109,16 +112,20 @@ for name in schur:
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
-        s = solver.Solver(problem=problem,
-                          params=params,
-                          appctx=appctx)
-        output_dict = s.linear_solve(plot_sol)
+        ns_solver = solver.Solver(problem=problem,
+                                  params=ns_params,
+                                  appctx=appctx)
+        output_dict = ns_solver.linear_solve(plot_sol)
+
         time.append(output_dict["time"])
-        iterations.append(output_dict["linear_iter"])
+        l_iterations.append(output_dict["linear_iter"])
+        nl_iterations.append(output_dict["nonlinear_iter"])
         DoF.append(output_dict["W_dim"])
 
-        table_dict[name] = {"Time": time, "Iteration": iterations}
+    table_dict[name] = {"Time": time,
+                        "NL Iteration": nl_iterations,
+                        "L Iteration": l_iterations}
 
-columns = [u'Time', u'Iteration']
+columns = [u'Time', u'L Iteration', u'NL Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
 print(table)
