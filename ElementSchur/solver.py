@@ -32,7 +32,7 @@ class Solver(object):
                                                  nullspace=nsp,
                                                  appctx=self.appctx)
 
-    def linear_solve(self, plot_sol=None):
+    def solve(self, plot_sol=None):
         print(f"\n\nTotal degrees of freedom {self.Z.dim()}")
         print(f"Solving for nu = {self.nu}")
 

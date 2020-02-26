@@ -109,10 +109,10 @@ for name in schur:
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
-        s = solver.Solver(problem=problem,
-                          params=params,
-                          appctx=appctx)
-        output_dict = s.linear_solve(plot_sol)
+        stokes_solver = solver.Solver(problem=problem,
+                                      params=params,
+                                      appctx=appctx)
+        output_dict = stokes_solver.solve(plot_sol)
         time.append(output_dict["time"])
         iterations.append(output_dict["linear_iter"])
         DoF.append(output_dict["W_dim"])

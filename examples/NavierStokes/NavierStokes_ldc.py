@@ -43,27 +43,27 @@ class LDC_problem_2D(navier_stokes.NavierStokes):
         return Constant((0., 0.))
 
 
-# class LDC_problem_3D(stokes.Stokes):
+class LDC_problem_3D(navier_stokes.NavierStokes):
 
-#     def __init__(self, n, nu=1):
-#         super(LDC_problem_3D, self).__init__(n, nu)
+    def __init__(self, n, nu=1):
+        super(LDC_problem_3D, self).__init__(n, nu)
 
-#     def mesh_domain(self):
-#         mesh = UnitCubeMesh(self.n, self.n, self.n)
-#         return mesh
+    def mesh_domain(self):
+        mesh = UnitCubeMesh(self.n, self.n, self.n)
+        return mesh
 
-#     def nullspace(self, Z):
-#         MVSB = MixedVectorSpaceBasis
-#         nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
-#         return nullspace
+    def nullspace(self, Z):
+        MVSB = MixedVectorSpaceBasis
+        nullspace = MVSB(Z, [Z.sub(0), VectorSpaceBasis(constant=True)])
+        return nullspace
 
-#     def bcs(self):
-#         bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0, 0)), (4,)),
-#                DirichletBC(self.Z.sub(0), Constant((0, 0, 0)), [1, 2, 3, 5, 6])]
-#         return bcs
+    def bcs(self):
+        bcs = [DirichletBC(self.Z.sub(0), Constant((1, 0, 0)), (4,)),
+               DirichletBC(self.Z.sub(0), Constant((0, 0, 0)), [1, 2, 3, 5, 6])]
+        return bcs
 
-#     def rhs(self):
-#         return Constant((0., 0., 0.))
+    def rhs(self):
+        return Constant((0., 0., 0.))
 
 
 schur = args.schur
@@ -115,7 +115,7 @@ for name in schur:
         ns_solver = solver.Solver(problem=problem,
                                   params=ns_params,
                                   appctx=appctx)
-        output_dict = ns_solver.linear_solve(plot_sol)
+        output_dict = ns_solver.solve(plot_sol)
 
         time.append(output_dict["time"])
         l_iterations.append(output_dict["linear_iter"])
