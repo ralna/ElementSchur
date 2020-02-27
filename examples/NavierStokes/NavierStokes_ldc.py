@@ -104,7 +104,7 @@ for name in schur:
     pprint.pprint(ns_params)
     for i in range(N):
         n = 2**(i + 3)
-        appctx = {"velocity_space": 0, "nu": nu}
+        appctx = {"velocity_space": 0, "nu": nu, "Re": 1. / nu}
         if space_dim == "2D":
             problem = LDC_problem_2D(n, nu=nu)
         elif space_dim == "3D":

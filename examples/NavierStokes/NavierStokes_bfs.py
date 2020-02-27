@@ -125,7 +125,7 @@ for name in schur:
     pprint.pprint(ns_params)
     for i in range(N):
 
-        appctx = {"velocity_space": 0, "nu": nu}
+        appctx = {"velocity_space": 0, "nu": nu, "Re": 1. / nu}
         if space_dim == "2D":
             problem = BFS_problem_2D(i, nu=nu)
         elif space_dim == "3D":
