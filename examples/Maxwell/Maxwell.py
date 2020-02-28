@@ -17,6 +17,9 @@ parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
 parser.add_argument('--plot-sol', type=str, default=False,
                     help='Plot solution (default False)')
+parser.add_argument('--solve-type', type=str, default=False,
+                    help='Defines the solver type to be direct or iterative '
+                         '(default iterative)')
 args, _ = parser.parse_known_args()
 
 
@@ -24,6 +27,7 @@ class Maxwell_2D(maxwell.Maxwell):
 
     def __init__(self, n, nu=1):
         super(Maxwell_2D, self).__init__(n, nu)
+        self.name = "maxwell_2d"
 
     def initial_conditions(self):
         (x, y) = SpatialCoordinate(self.Z.mesh())
@@ -53,6 +57,7 @@ class Maxwell_3D(maxwell.Maxwell):
 
     def __init__(self, n, nu=1):
         super(Maxwell_3D, self).__init__(n, nu)
+        self.name = "maxwell_3d"
 
     def initial_conditions(self):
         (x, y, z) = SpatialCoordinate(self.Z.mesh())
@@ -83,11 +88,12 @@ N = args.N
 nu = args.nu
 space_dim = args.space_dim
 plot_sol = args.plot_sol
+solve_type = args.solve_type
 
 formatters = {'Time': '{:5.1f}',
               'Iteration': '{:5.0f}'}
 
-options = solver_options.PETScOptions(solve_type="direct")
+options = solver_options.PETScOptions(solve_type=solve_type)
 
 dual_ele = options.dual_ele
 primal_ele = options.primal_ele

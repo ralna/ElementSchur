@@ -6,6 +6,7 @@ from ElementSchur.problemclass import BaseProblem
 class NavierStokes(BaseProblem):
 
     def __init__(self, n, Re=1):
+        super(NavierStokes, self).__init__()
         self.n = n
         self.Re = Re
 

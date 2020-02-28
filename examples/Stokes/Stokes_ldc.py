@@ -13,10 +13,13 @@ parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
                     help='Viscosity of the fluid (default 1)')
-parser.add_argument('-d', '--space_dim', type=str, default="2D",
+parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
 parser.add_argument('--plot-sol', type=str, default=False,
                     help='Plot solution (default False)')
+parser.add_argument('--solve-type', type=str, default=False,
+                    help='Defines the solver type to be direct or iterative '
+                         '(default iterative)')
 args, _ = parser.parse_known_args()
 
 
@@ -24,6 +27,7 @@ class LDC_problem_2D(stokes.Stokes):
 
     def __init__(self, n, Re=1):
         super(LDC_problem_2D, self).__init__(n, Re)
+        self.name = "stokes_ldc_2d"
 
     def mesh_domain(self):
         mesh = UnitSquareMesh(self.n, self.n)
@@ -47,6 +51,7 @@ class LDC_problem_3D(stokes.Stokes):
 
     def __init__(self, n, Re=1):
         super(LDC_problem_3D, self).__init__(n, Re)
+        self.name = "stokes_ldc_3d"
 
     def mesh_domain(self):
         mesh = UnitCubeMesh(self.n, self.n, self.n)
@@ -71,11 +76,12 @@ N = args.N
 Re = args.Re
 space_dim = args.space_dim
 plot_sol = args.plot_sol
+solve_type = args.solve_type
 
 formatters = {'Time': '{:5.1f}',
               'Iteration': '{:5.0f}'}
 
-options = solver_options.PETScOptions()
+options = solver_options.PETScOptions(solve_type=solve_type)
 
 dual_ele = options.dual_ele
 primal_ele = options.primal_ele

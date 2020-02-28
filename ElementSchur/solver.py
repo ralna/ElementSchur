@@ -1,7 +1,9 @@
 from firedrake import *
 
+import os
 import matplotlib.pylab as plt
 from datetime import datetime
+import json
 
 
 class Solver(object):
@@ -51,18 +53,32 @@ class Solver(object):
         F = assemble(self.F)
         for bc in self.bcs:
             bc.zero(F)
+
         with F.dat.vec_ro as v:
             print(f"Residual: {v.norm()}")
+        u = self.z.split()[0]
         if plot_sol:
-            u = self.z.split()[0]
             plot(u)
             plt.show()
+        filename = f"{self.problem.name}_Re={self.Re}_n={self.Z.dim()}"
         info_dict = {
             "W_dim": self.Z.dim(),
             "Re": self.Re,
             "linear_iter": lin_it,
             "nonlinear_iter": nonlin_it,
-            "time": time,
-            "sol": self.z
+            "time": time
         }
+        self.save_sol(u, info_dict, filename)
         return info_dict
+
+    def save_sol(self, u, info_dict, filename):
+        wd = os.getcwd()
+        results_dir = os.path.join(wd, f"results_{self.problem.name}")
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+        filename_path_fig = os.path.join(results_dir, f"{filename}.pvd")
+        filename_path_dict = os.path.join(results_dir, f"{filename}.json")
+        outfile = File(filename_path_fig)
+        outfile.write(u)
+        with open(filename_path_dict, "w") as f:
+            json.dump(info_dict, f)

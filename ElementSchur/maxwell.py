@@ -6,6 +6,7 @@ from ElementSchur.problemclass import BaseProblem
 class Maxwell(BaseProblem):
 
     def __init__(self, n, nu=1):
+        super(Maxwell, self).__init__()
         self.n = n
         self.nu = nu
 

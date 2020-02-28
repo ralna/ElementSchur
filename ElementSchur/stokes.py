@@ -25,6 +25,7 @@ class Stokes(BaseProblem):
         u, p = split(z)
         v, q = TestFunctions(self.Z)
         f = self.rhs()
+        print(v)
         a = (
             (1. / self.Re) * inner(grad(u), grad(v)) * dx
             - p * div(v) * dx

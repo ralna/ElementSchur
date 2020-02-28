@@ -3,6 +3,9 @@ from firedrake import *
 
 class BaseProblem(object):
 
+    def __init__(self):
+        self.name = "default_name"
+
     def mesh(self, n):
         raise NotImplementedError
 

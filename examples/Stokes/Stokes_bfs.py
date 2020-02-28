@@ -1,14 +1,14 @@
 import argparse
 import inspect
 from firedrake import *
-import os
 import pprint
+import os
 
-from ElementSchur import solver, navier_stokes, solver_options, utils
+from ElementSchur import solver, stokes, solver_options, utils
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'pcd'],
+                    default=['dual', 'reisz'],
                     help='Schur complement approximation type (default '
                     'dual reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
@@ -25,12 +25,12 @@ parser.add_argument('--solve-type', type=str, default=False,
 args, _ = parser.parse_known_args()
 
 
-class BFS_problem_2D(navier_stokes.NavierStokes):
+class BFS_problem_2D(stokes.Stokes):
 
     def __init__(self, n, Re=1):
         super(BFS_problem_2D, self).__init__(n, Re)
-        self.name = "ns_bfs_2d"
-        base_path = os.path.dirname(inspect.getfile(navier_stokes))
+        self.name = "stokes_bfs_2d"
+        base_path = os.path.dirname(inspect.getfile(stokes))
         self.mesh_path = os.path.join(base_path, "mesh", "bfs_2d")
 
     def mesh_domain(self):
@@ -59,13 +59,12 @@ class BFS_problem_2D(navier_stokes.NavierStokes):
         return Constant((0., 0.))
 
 
-class BFS_problem_3D(navier_stokes.NavierStokes):
+class BFS_problem_3D(stokes.Stokes):
 
     def __init__(self, n, Re=1):
         super(BFS_problem_3D, self).__init__(n, Re)
-        self.name = "ns_bfs_3d"
-
-        base_path = os.path.dirname(inspect.getfile(navier_stokes))
+        self.name = "stokes_bfs_3d"
+        base_path = os.path.dirname(inspect.getfile(stokes))
         self.mesh_path = os.path.join(base_path, "mesh", "bfs_3d")
 
     def mesh_domain(self):
@@ -102,39 +101,35 @@ plot_sol = args.plot_sol
 solve_type = args.solve_type
 
 formatters = {'Time': '{:5.1f}',
-              'NL Iteration': '{:5.0f}',
-              'L Iteration': '{:5.1f}'}
+              'Iteration': '{:5.0f}'}
 
 options = solver_options.PETScOptions(solve_type=solve_type)
 
 dual_ele = options.dual_ele
 primal_ele = options.primal_ele
-pcd = options.pcd
-v_cycle_unassembled = options.v_cycle_unassembled
-direct_unassembled = options.direct_unassembled
+L2_inner = options.L2_inner
+H1_inner = options.H1_inner
 
 table_dict = {}
 for name in schur:
-    l_iterations = []
-    nl_iterations = []
+    iterations = []
     time = []
     DoF = []
     boader = "#" * (len(name) + 10)
     indent = " " * 5
     print(f"  {boader}\n  {indent}{name.upper()}\n  {boader}")
-    if name == "pcd":
-        ns_params = options.nonlinear_solve(v_cycle_unassembled, pcd,
-                                            fact_type="full")
+    if name == "reisz":
+        params = options.linear_solve(H1_inner, L2_inner)
     elif name == "dual":
-        ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele,
-                                            fact_type="full")
+        params = options.linear_solve(H1_inner, dual_ele)
     elif name == "primal":
-        ns_params = options.nonlinear_solve(primal_ele, L2_inner)
+        params = options.linear_solve(primal_ele, L2_inner)
 
-    pprint.pprint(ns_params)
+    pprint.pprint(params)
     for i in range(N):
-        # i += 1
-        appctx = {"velocity_space": 0, "Re": Re}
+
+        n = 2**(i + 0)
+        appctx = {"scale_l2": Re, "scale_h1_semi": 1. / Re}
         if space_dim == "2D":
             problem = BFS_problem_2D(i, Re=Re)
         elif space_dim == "3D":
@@ -142,20 +137,16 @@ for name in schur:
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
-        ns_solver = solver.Solver(problem=problem,
-                                  params=direct_unassembled,
-                                  appctx=appctx)
-        output_dict = ns_solver.solve(plot_sol)
-
+        stokes_solver = solver.Solver(problem=problem,
+                                      params=params,
+                                      appctx=appctx)
+        output_dict = stokes_solver.solve(plot_sol)
         time.append(output_dict["time"])
-        l_iterations.append(output_dict["linear_iter"])
-        nl_iterations.append(output_dict["nonlinear_iter"])
+        iterations.append(output_dict["linear_iter"])
         DoF.append(output_dict["W_dim"])
 
-    table_dict[name] = {"Time": time,
-                        "NL Iteration": nl_iterations,
-                        "L Iteration": l_iterations}
+        table_dict[name] = {"Time": time, "Iteration": iterations}
 
-columns = [u'Time', u'L Iteration', u'NL Iteration']
+columns = [u'Time', u'Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
 print(table)

@@ -1,4 +1,3 @@
-Mesh.CharacteristicLengthFactor = 0.14;
 Lx = 10;
 Ly = 2;
 Lstep = 1;
