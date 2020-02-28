@@ -110,7 +110,7 @@ for name in schur:
 
     pprint.pprint(ns_params)
     for i in range(N):
-        n = 2**(i + 3)
+        n = 2**(i + 1)
         appctx = {"velocity_space": 0, "Re": Re}
         if space_dim == "2D":
             problem = LDC_problem_2D(n, Re=Re)
@@ -136,4 +136,6 @@ for name in schur:
 
 columns = [u'Time', u'L Iteration', u'NL Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
+name = f"navier_stokes_ldc_{space_dim}_Re={Re}.tex"
 print(table)
+table.to_latex(name)

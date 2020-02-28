@@ -111,7 +111,6 @@ dual_ele = options.dual_ele
 primal_ele = options.primal_ele
 pcd = options.pcd
 v_cycle_unassembled = options.v_cycle_unassembled
-direct_unassembled = options.direct_unassembled
 
 table_dict = {}
 for name in schur:
@@ -143,7 +142,7 @@ for name in schur:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
         ns_solver = solver.Solver(problem=problem,
-                                  params=direct_unassembled,
+                                  params=ns_params,
                                   appctx=appctx)
         output_dict = ns_solver.solve(plot_sol)
 
@@ -158,4 +157,6 @@ for name in schur:
 
 columns = [u'Time', u'L Iteration', u'NL Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
+name = f"navier_stokes_bfs_{space_dim}_Re={Re}.tex"
 print(table)
+table.to_latex(name)

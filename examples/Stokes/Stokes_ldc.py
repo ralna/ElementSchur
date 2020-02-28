@@ -127,4 +127,6 @@ for name in schur:
 
 columns = [u'Time', u'Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
+name = f"stokes_ldc_{space_dim}_Re={Re}.tex"
 print(table)
+table.to_latex(name)

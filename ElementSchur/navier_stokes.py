@@ -10,7 +10,7 @@ class NavierStokes(BaseProblem):
         self.n = n
         self.Re = Re
 
-    def primal_space(self, mesh):
+    def primal_space(self, mesh, vel_degree_wo_bubble=1):
         self.V = VectorFunctionSpace(mesh, "CG", 2)
         return self.V
 

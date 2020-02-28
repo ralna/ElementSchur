@@ -11,7 +11,7 @@ parser.add_argument('-s', '--schur', nargs='+',
                     'ele reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
-parser.add_argument('-nu', '--nu', type=float, default=1,
+parser.add_argument('-Re', '--Re', type=float, default=1,
                     help='Viscosity of the fluid (default 1)')
 parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
@@ -25,8 +25,8 @@ args, _ = parser.parse_known_args()
 
 class Maxwell_2D(maxwell.Maxwell):
 
-    def __init__(self, n, nu=1):
-        super(Maxwell_2D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(Maxwell_2D, self).__init__(n, Re)
         self.name = "maxwell_2d"
 
     def initial_conditions(self):
@@ -49,14 +49,14 @@ class Maxwell_2D(maxwell.Maxwell):
 
     def rhs(self):
         u0, p0 = self.initial_conditions()
-        f = self.nu * curl(curl(u0)) + grad(p0)
+        f = (1. / self.Re) * curl(curl(u0)) + grad(p0)
         return f
 
 
 class Maxwell_3D(maxwell.Maxwell):
 
-    def __init__(self, n, nu=1):
-        super(Maxwell_3D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(Maxwell_3D, self).__init__(n, Re)
         self.name = "maxwell_3d"
 
     def initial_conditions(self):
@@ -79,13 +79,13 @@ class Maxwell_3D(maxwell.Maxwell):
 
     def rhs(self):
         u0, p0 = self.initial_conditions()
-        f = self.nu * curl(curl(u0)) + grad(p0)
+        f = (1. / self.Re) * curl(curl(u0)) + grad(p0)
         return f
 
 
 schur = args.schur
 N = args.N
-nu = args.nu
+Re = args.Re
 space_dim = args.space_dim
 plot_sol = args.plot_sol
 solve_type = args.solve_type
@@ -122,11 +122,11 @@ for name in schur:
     for i in range(N):
 
         n = 2**(i + 2)
-        appctx = {"scale_Hcurl": nu}
+        appctx = {"scale_Hcurl": 1. / Re}
         if space_dim == "2D":
-            problem = Maxwell_2D(n, nu=nu)
+            problem = Maxwell_2D(n, Re=Re)
         elif space_dim == "3D":
-            problem = Maxwell_3D(n, nu=nu)
+            problem = Maxwell_3D(n, Re=Re)
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
@@ -144,4 +144,6 @@ for name in schur:
 
 columns = [u'Time', u'Iteration']
 table = utils.combine_tables(table_dict, DoF, columns, formatters)
+name = f"maxwell_{space_dim}_Re={Re}.tex"
 print(table)
+table.to_latex(name)

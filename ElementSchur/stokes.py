@@ -6,6 +6,7 @@ from ElementSchur.problemclass import BaseProblem
 class Stokes(BaseProblem):
 
     def __init__(self, n, Re=1):
+        super(Stokes, self).__init__()
         self.n = n
         self.Re = Re
 

@@ -30,9 +30,9 @@ class Solver(object):
                                                  solver_parameters=self.params,
                                                  nullspace=nsp,
                                                  appctx=self.appctx)
+        print(f"\n\nTotal degrees of freedom {self.Z.dim()}")
 
     def solve(self, plot_sol=None):
-        print(f"\n\nTotal degrees of freedom {self.Z.dim()}")
         print(f"Solving for Re = {self.Re}")
 
         try:

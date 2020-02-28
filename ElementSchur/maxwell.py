@@ -5,10 +5,10 @@ from ElementSchur.problemclass import BaseProblem
 
 class Maxwell(BaseProblem):
 
-    def __init__(self, n, nu=1):
+    def __init__(self, n, Re=1):
         super(Maxwell, self).__init__()
         self.n = n
-        self.nu = nu
+        self.Re = Re
 
     def primal_space(self, mesh):
         self.V = FunctionSpace(mesh, "N1curl", 1)
@@ -27,7 +27,7 @@ class Maxwell(BaseProblem):
         v, q = TestFunctions(self.Z)
         f = self.rhs()
         a = (
-            self.nu * inner(curl(u), curl(v)) * dx
+            (1. / self.Re) * inner(curl(u), curl(v)) * dx
             + inner(v, grad(p)) * dx
             + inner(u, grad(q)) * dx
         )
@@ -40,14 +40,14 @@ class Maxwell(BaseProblem):
         v, q = TestFunctions(self.Z)
         if schur_type == "dual":
             a = (
-                self.nu * inner(curl(u), curl(v)) * dx + inner(u, v) * dx
+                (1. / self.Re) * inner(curl(u), curl(v)) * dx + inner(u, v) * dx
                 + inner(v, grad(p)) * dx
                 + inner(u, grad(q)) * dx
             )
         elif schur_type == "primal":
             eps = CellSize(mesh)**2
             a = (
-                self.nu * inner(curl(u), curl(v)) * dx
+                (1. / self.Re) * inner(curl(u), curl(v)) * dx
                 + inner(v, grad(p)) * dx
                 + inner(u, grad(q)) * dx
                 + inner(grad(p), grad(q)) * dx + eps * inner(p, q) * dx

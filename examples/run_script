@@ -1,0 +1,56 @@
+# 2D
+# Running Maxwell examples
+python Maxwell/Maxwell.py -N 1 -Re 1
+python Maxwell/Maxwell.py -N 1 -Re 10
+python Maxwell/Maxwell.py -N 1 -Re 100
+
+# Running Stokes examples
+python Stokes/Stokes_ldc.py -N 1 -Re 1
+python Stokes/Stokes_ldc.py -N 1 -Re 10
+python Stokes/Stokes_ldc.py -N 1 -Re 100
+python Stokes/Stokes_ldc.py -N 1 -Re 1000
+
+python Stokes/Stokes_bfs.py -N 1 -Re 1
+python Stokes/Stokes_bfs.py -N 1 -Re 10
+python Stokes/Stokes_bfs.py -N 1 -Re 100
+
+# Running Navier-Stokes examples
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 1
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 10
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 100
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 200
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 400
+
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 1
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 10
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 50
+
+
+
+# 3D
+# Running Maxwell examples
+python Maxwell/Maxwell.py -N 1 -Re 1 --space-dim 3D
+python Maxwell/Maxwell.py -N 1 -Re 10 --space-dim 3D
+python Maxwell/Maxwell.py -N 1 -Re 100 --space-dim 3D
+
+# Running Stokes examples
+python Stokes/Stokes_ldc.py -N 1 -Re 1 --space-dim 3D
+python Stokes/Stokes_ldc.py -N 1 -Re 10 --space-dim 3D
+python Stokes/Stokes_ldc.py -N 1 -Re 100 --space-dim 3D
+python Stokes/Stokes_ldc.py -N 1 -Re 200 --space-dim 3D
+
+python Stokes/Stokes_bfs.py -N 1 -Re 1 --space-dim 3D
+python Stokes/Stokes_bfs.py -N 1 -Re 10 --space-dim 3D
+python Stokes/Stokes_bfs.py -N 1 -Re 50 --space-dim 3D
+
+
+# Running Navier-Stokes examples
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 1 --space-dim 3D
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 10 --space-dim 3D
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 100 --space-dim 3D
+python NavierStokes/NavierStokes_ldc.py -N 1 -Re 200 --space-dim 3D
+
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 1 --space-dim 3D
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 10 --space-dim 3D
+python NavierStokes/NavierStokes_bfs.py -N 1 -Re 50 --space-dim 3D
+
