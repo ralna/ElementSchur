@@ -11,7 +11,7 @@ parser.add_argument('-s', '--schur', nargs='+',
                     'dual reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
-parser.add_argument('-nu', '--nu', type=float, default=1,
+parser.add_argument('-Re', '--Re', type=float, default=1,
                     help='Viscosity of the fluid (default 1)')
 parser.add_argument('-d', '--space_dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
@@ -22,8 +22,8 @@ args, _ = parser.parse_known_args()
 
 class LDC_problem_2D(stokes.Stokes):
 
-    def __init__(self, n, nu=1):
-        super(LDC_problem_2D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(LDC_problem_2D, self).__init__(n, Re)
 
     def mesh_domain(self):
         mesh = UnitSquareMesh(self.n, self.n)
@@ -45,8 +45,8 @@ class LDC_problem_2D(stokes.Stokes):
 
 class LDC_problem_3D(stokes.Stokes):
 
-    def __init__(self, n, nu=1):
-        super(LDC_problem_3D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(LDC_problem_3D, self).__init__(n, Re)
 
     def mesh_domain(self):
         mesh = UnitCubeMesh(self.n, self.n, self.n)
@@ -68,7 +68,7 @@ class LDC_problem_3D(stokes.Stokes):
 
 schur = args.schur
 N = args.N
-nu = args.nu
+Re = args.Re
 space_dim = args.space_dim
 plot_sol = args.plot_sol
 
@@ -101,11 +101,11 @@ for name in schur:
     for i in range(N):
 
         n = 2**(i + 1)
-        appctx = {"scale_l2": 1. / nu, "scale_h1_semi": nu}
+        appctx = {"scale_l2": Re, "scale_h1_semi": 1. / Re}
         if space_dim == "2D":
-            problem = LDC_problem_2D(n, nu=nu)
+            problem = LDC_problem_2D(n, Re=Re)
         elif space_dim == "3D":
-            problem = LDC_problem_3D(n, nu=nu)
+            problem = LDC_problem_3D(n, Re=Re)
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
