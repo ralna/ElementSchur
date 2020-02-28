@@ -5,9 +5,9 @@ from ElementSchur.problemclass import BaseProblem
 
 class NavierStokes(BaseProblem):
 
-    def __init__(self, n, nu=1):
+    def __init__(self, n, Re=1):
         self.n = n
-        self.nu = nu
+        self.Re = Re
 
     def primal_space(self, mesh):
         self.V = VectorFunctionSpace(mesh, "CG", 2)
@@ -26,7 +26,7 @@ class NavierStokes(BaseProblem):
         v, q = TestFunctions(self.Z)
         f = self.rhs()
         a = (
-            self.nu * inner(grad(u), grad(v)) * dx
+            (1. / self.Re) * inner(grad(u), grad(v)) * dx
             + inner(dot(grad(u), u), v) * dx
             - p * div(v) * dx
             - q * div(u) * dx
@@ -42,7 +42,7 @@ class NavierStokes(BaseProblem):
         if schur_type == "dual":
             eps = CellSize(mesh)**2
             a = (
-                -self.nu * inner(grad(u), grad(v)) * dx
+                -(1. / self.Re) * inner(grad(u), grad(v)) * dx
                 - inner(dot(grad(u), u_k), v) * dx
                 - eps * inner(u, v) * dx
                 - p * div(v) * dx
@@ -50,7 +50,7 @@ class NavierStokes(BaseProblem):
             )
         elif schur_type == "primal":
             a = (
-                self.nu * inner(grad(u), grad(v)) * dx
+                (1. / self.Re) * inner(grad(u), grad(v)) * dx
                 + inner(dot(grad(u), u_k), v) * dx
                 - p * div(v) * dx
                 - q * div(u) * dx

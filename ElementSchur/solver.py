@@ -10,17 +10,14 @@ class Solver(object):
         self.problem = problem
         self.params = params
         self.appctx = appctx
-        self.nu = self.problem.nu
+        self.Re = self.problem.Re
 
         self.mesh = self.problem.mesh_domain()
         self.problem.primal_space(self.mesh)
         self.problem.dual_space(self.mesh)
         self.Z = self.problem.mixed_space()
         self.z = Function(self.Z)
-        # print(z)
-        # if z is not None:
-        #     self.z.assign(z)
-        print(self.z)
+
         self.F = self.problem.form(self.z)
         self.appctx["a"] = self.problem.linear_form(self.mesh,
                                                     schur_type)
@@ -34,7 +31,7 @@ class Solver(object):
 
     def solve(self, plot_sol=None):
         print(f"\n\nTotal degrees of freedom {self.Z.dim()}")
-        print(f"Solving for nu = {self.nu}")
+        print(f"Solving for Re = {self.Re}")
 
         try:
             start = datetime.now()
@@ -62,7 +59,7 @@ class Solver(object):
             plt.show()
         info_dict = {
             "W_dim": self.Z.dim(),
-            "nu": self.nu,
+            "Re": self.Re,
             "linear_iter": lin_it,
             "nonlinear_iter": nonlin_it,
             "time": time,

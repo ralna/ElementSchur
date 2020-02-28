@@ -13,9 +13,9 @@ parser.add_argument('-s', '--schur', nargs='+',
                     'dual reisz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
-parser.add_argument('-nu', '--nu', type=float, default=1,
+parser.add_argument('-Re', '--Re', type=float, default=1,
                     help='Viscosity of the fluid (default 1)')
-parser.add_argument('-d', '--space_dim', type=str, default="2D",
+parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
 parser.add_argument('--plot-sol', type=str, default=False,
                     help='Plot solution (default False)')
@@ -24,18 +24,19 @@ args, _ = parser.parse_known_args()
 
 class BFS_problem_2D(navier_stokes.NavierStokes):
 
-    def __init__(self, n, nu=1):
-        super(BFS_problem_2D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(BFS_problem_2D, self).__init__(n, Re)
         base_path = os.path.dirname(inspect.getfile(navier_stokes))
         self.mesh_path = os.path.join(base_path, "mesh", "bfs_2d")
 
     def mesh_domain(self):
         file_name = os.path.join(self.mesh_path, f"bfs_2d_{self.n}.msh")
+        print(file_name)
         if os.path.isfile(file_name):
             mesh = Mesh(file_name)
         else:
             raise RuntimeError("Mesh file does not exsist, please run make "
-                               f"in {self.mesh_path}")
+                               f"in {file_name}")
         return mesh
 
     def nullspace(self, Z):
@@ -45,7 +46,7 @@ class BFS_problem_2D(navier_stokes.NavierStokes):
         (x, y) = SpatialCoordinate(self.Z.mesh())
         return as_vector([4 * (2 - y) * (y - 1) * (y > 1), 0])
 
-    def bcs(self, Z):
+    def bcs(self):
         bcs = [DirichletBC(self.Z.sub(0), self.poiseuille_flow(), 1),
                DirichletBC(self.Z.sub(0), Constant((0., 0.)), 2)]
         return bcs
@@ -56,8 +57,8 @@ class BFS_problem_2D(navier_stokes.NavierStokes):
 
 class BFS_problem_3D(navier_stokes.NavierStokes):
 
-    def __init__(self, n, nu=1):
-        super(BFS_problem_3D, self).__init__(n, nu)
+    def __init__(self, n, Re=1):
+        super(BFS_problem_3D, self).__init__(n, Re)
         base_path = os.path.dirname(inspect.getfile(navier_stokes))
         self.mesh_path = os.path.join(base_path, "mesh", "bfs_3d")
 
@@ -66,8 +67,8 @@ class BFS_problem_3D(navier_stokes.NavierStokes):
         if os.path.isfile(file_name):
             mesh = Mesh(file_name)
         else:
-            raise RuntimeError("Mesh file does not exsist, please run make "
-                               f"in {self.mesh_path}")
+            raise RuntimeError("Mesh file does not exist, please run make "
+                               f"in {file_name}")
         return mesh
 
     def nullspace(self, Z):
@@ -78,7 +79,7 @@ class BFS_problem_3D(navier_stokes.NavierStokes):
         out = as_vector([16 * (2 - y) * (y - 1) * z * (1 - z) * (y > 1), 0, 0])
         return out
 
-    def bcs(self, Z):
+    def bcs(self):
         bcs = [DirichletBC(self.Z.sub(0), self.poiseuille_flow(), 1),
                DirichletBC(self.Z.sub(0), Constant((0., 0., 0.)), 3)]
         return bcs
@@ -89,7 +90,7 @@ class BFS_problem_3D(navier_stokes.NavierStokes):
 
 schur = args.schur
 N = args.N
-nu = args.nu
+Re = args.Re
 space_dim = args.space_dim
 plot_sol = args.plot_sol
 
@@ -124,12 +125,12 @@ for name in schur:
 
     pprint.pprint(ns_params)
     for i in range(N):
-
-        appctx = {"velocity_space": 0, "nu": nu, "Re": 1. / nu}
+        i += 1
+        appctx = {"velocity_space": 0, "Re": Re}
         if space_dim == "2D":
-            problem = BFS_problem_2D(i, nu=nu)
+            problem = BFS_problem_2D(i, Re=Re)
         elif space_dim == "3D":
-            problem = BFS_problem_3D(i, nu=nu)
+            problem = BFS_problem_3D(i, Re=Re)
         else:
             raise ValueError("space_dim variable needs to be 2D or 3D, "
                              f"currently give {space_dim}")
