@@ -3,9 +3,6 @@ from firedrake.petsc import PETSc
 from firedrake import *
 from firedrake.assemble import allocate_matrix, create_assembly_callable
 
-__all__ = ("Element_Schur", "Element_Schur_Stokes", "Element_Schur_NS",
-           "ScalarLaplacian", "ShiftedCurlCurl")
-
 
 class MYPC(PCBase):
 
@@ -39,7 +36,6 @@ class MYPC(PCBase):
             A = assemble(s, bcs=bcs,
                          form_compiler_parameters=context.fc_params,
                          mat_type="aij", options_prefix=prefix)
-            A.force_evaluation()
 
             ksp = PETSc.KSP().create(comm=pc.comm)
             ksp.incrementTabLevel(1, parent=pc)
