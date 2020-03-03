@@ -17,7 +17,7 @@ parser.add_argument('-d', '--space-dim', type=str, default="2D",
                     help='Spacial dimension of the problem (default 2D)')
 parser.add_argument('--plot-sol', type=str, default=False,
                     help='Plot solution (default False)')
-parser.add_argument('--solve-type', type=str, default=False,
+parser.add_argument('--solve-type', type=str, default="iterative",
                     help='Defines the solver type to be direct or iterative '
                          '(default iterative)')
 args, _ = parser.parse_known_args()

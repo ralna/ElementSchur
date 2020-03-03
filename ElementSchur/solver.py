@@ -73,7 +73,7 @@ class Solver(object):
 
     def save_sol(self, u, info_dict, filename):
         wd = os.getcwd()
-        results_dir = os.path.join(wd, f"results_{self.problem.name}")
+        results_dir = os.path.join(wd, "results", f"{self.problem.name}")
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
         filename_path_fig = os.path.join(results_dir, f"{filename}.pvd")
