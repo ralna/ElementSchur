@@ -8,21 +8,21 @@ import json
 
 class Solver(object):
 
-    def __init__(self, problem, params, schur_type="dual", appctx={}, z=None):
+    def __init__(self, problem, params, appctx={}, z=None):
         self.problem = problem
         self.params = params
         self.appctx = appctx
         self.Re = self.problem.Re
 
         self.mesh = self.problem.mesh_domain()
-        self.problem.primal_space(self.mesh)
-        self.problem.dual_space(self.mesh)
-        self.Z = self.problem.mixed_space()
-        self.z = Function(self.Z)
+        self.V = self.problem.primal_space(self.mesh)
+        self.Q = self.problem.dual_space(self.mesh)
+        self.Z = self.problem.mixed_space(self.V, self.Q)
+        self.z = problem.initial_guess(self.Z)
 
         self.F = self.problem.form(self.z)
-        self.appctx["a"] = self.problem.linear_form(self.mesh,
-                                                    schur_type)
+        self.appctx["problem"] = self.problem
+
         nsp = problem.nullspace(self.Z)
         self.bcs = problem.bcs()
         NL_problem = NonlinearVariationalProblem(self.F, self.z, bcs=self.bcs)
@@ -58,7 +58,8 @@ class Solver(object):
             print(f"Residual: {v.norm()}")
         u = self.z.split()[0]
         if plot_sol:
-            plot(u)
+            print(u)
+            quiver(u)
             plt.show()
         filename = f"{self.problem.name}_Re={self.Re}_n={self.Z.dim()}"
         info_dict = {

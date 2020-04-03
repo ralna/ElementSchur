@@ -107,8 +107,8 @@ formatters = {'Time': '{:5.1f}',
 
 options = solver_options.PETScOptions(solve_type=solve_type)
 
-dual_ele = options.dual_ele
-primal_ele = options.primal_ele
+dual_ele = options.custom_pc_amg(
+    "ElementSchur.navier_stokes.NavierStokesEleDual", "dual")
 pcd = options.pcd
 v_cycle_unassembled = options.v_cycle_unassembled
 
@@ -127,8 +127,6 @@ for name in schur:
     elif name == "dual":
         ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele,
                                             fact_type="full")
-    elif name == "primal":
-        ns_params = options.nonlinear_solve(primal_ele, L2_inner)
 
     pprint.pprint(ns_params)
     for i in range(N):

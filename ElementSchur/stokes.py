@@ -1,6 +1,7 @@
 from firedrake import *
 
 from ElementSchur.problemclass import BaseProblem
+from ElementSchur.preconditioners import DualElementSchur
 
 
 class Stokes(BaseProblem):
@@ -18,8 +19,8 @@ class Stokes(BaseProblem):
         self.Q = FunctionSpace(mesh, "CG", 1)
         return self.Q
 
-    def mixed_space(self):
-        self.Z = self.V * self.Q
+    def mixed_space(self, V, Q):
+        self.Z = V * Q
         return self.Z
 
     def form(self, z):
@@ -35,24 +36,22 @@ class Stokes(BaseProblem):
         self.F = a - l
         return self.F
 
-    def linear_form(self, mesh, schur_type):
-        u, p = TrialFunctions(self.Z)
-        v, q = TestFunctions(self.Z)
-        if schur_type == "dual":
-            eps = CellSize(mesh)**2
-            a = (
-                (1. / self.Re) * inner(grad(u), grad(v)) * dx
-                + eps * inner(u, v) * dx
-                - p * div(v) * dx
-                - q * div(u) * dx
-            )
-        elif schur_type == "primal":
-            a = (
-                (1. / self.Re) * inner(grad(u), grad(v)) * dx
-                - p * div(v) * dx
-                - q * div(u) * dx
-                + inner(q, p) * dx
-            )
-        else:
-            a = None
+    def initial_guess(self, Z):
+        self.z = Function(Z)
+        return self.z
+
+
+class StokesEleDual(DualElementSchur):
+
+    def form(self, appctx, problem):
+        u, p = TrialFunctions(problem.Z)
+        v, q = TestFunctions(problem.Z)
+
+        eps = CellSize(problem.Z.mesh())**2
+        a = (
+            -(1. / problem.Re) * inner(grad(u), grad(v)) * dx
+            - eps * inner(u, v) * dx
+            - p * div(v) * dx
+            - q * div(u) * dx
+        )
         return a

@@ -8,9 +8,9 @@ from ElementSchur import solver, stokes, solver_options, utils
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'reisz'],
+                    default=['dual', 'riesz'],
                     help='Schur complement approximation type (default '
-                    'dual reisz')
+                    'dual riesz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -105,10 +105,10 @@ formatters = {'Time': '{:5.1f}',
 
 options = solver_options.PETScOptions(solve_type=solve_type)
 
-dual_ele = options.dual_ele
-primal_ele = options.primal_ele
-L2_inner = options.L2_inner
-H1_inner = options.H1_inner
+dual_ele = options.custom_pc_amg("ElementSchur.stokes.StokesEleDual", "dual")
+L2_inner = options.custom_pc_amg("ElementSchur.preconditioners.L2Inner",
+                                 "l2_inner")
+v_cycle_unassembled = options.v_cycle_unassembled
 
 table_dict = {}
 for name in schur:
@@ -118,12 +118,10 @@ for name in schur:
     boader = "#" * (len(name) + 10)
     indent = " " * 5
     print(f"  {boader}\n  {indent}{name.upper()}\n  {boader}")
-    if name == "reisz":
-        params = options.linear_solve(H1_inner, L2_inner)
+    if name == "riesz":
+        params = options.linear_solve(v_cycle_unassembled, L2_inner)
     elif name == "dual":
-        params = options.linear_solve(H1_inner, dual_ele)
-    elif name == "primal":
-        params = options.linear_solve(primal_ele, L2_inner)
+        params = options.linear_solve(v_cycle_unassembled, dual_ele)
 
     pprint.pprint(params)
     for i in range(N):

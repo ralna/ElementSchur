@@ -6,9 +6,9 @@ from ElementSchur import solver, maxwell, solver_options, utils
 
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'primal', 'reisz'],
+                    default=['dual', 'primal', 'riesz'],
                     help='Schur complement approximation type (default '
-                    'ele reisz')
+                    'dual riesz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -31,7 +31,7 @@ class Maxwell_2D(maxwell.Maxwell):
 
     def initial_conditions(self):
         (x, y) = SpatialCoordinate(self.Z.mesh())
-        self.u0 = curl(exp(x) * cos(y))
+        self.u0 = curl(exp(x) * cos(x + y))
         self.p0 = x * y * cos(x + y)
         return self.u0, self.p0
 
@@ -95,13 +95,14 @@ formatters = {'Time': '{:5.1f}',
 
 options = solver_options.PETScOptions(solve_type=solve_type)
 
-dual_ele = options.dual_ele
-primal_ele = options.primal_ele
+dual_ele = options.custom_pc_amg("ElementSchur.maxwell.MaxwellEleDual", "dual")
+primal_ele = options.custom_pc_direct(
+    "ElementSchur.maxwell.MaxwellElePrimal", "primal")
 
-Hcurl_inner = options.Hcurl_inner
-H1_inner = options.H1_inner
-
-direct_unassembled = options.direct_unassembled
+Hcurl_inner = options.custom_pc_direct(
+    "ElementSchur.preconditioners.HcurlInner", "hcurl")
+H1_inner = options.custom_pc_amg(
+    "ElementSchur.preconditioners.H1SemiInner", "h1_semi")
 
 table_dict = {}
 for name in schur:
@@ -112,17 +113,20 @@ for name in schur:
     indent = " " * 5
     print(f"  {boader}\n  {indent}{name.upper()}\n  {boader}")
 
-    if name == "reisz":
+    appctx = {"scale_Hcurl": 1. / Re}
+    if name == "riesz":
         params = options.linear_solve(Hcurl_inner, H1_inner)
     elif name == "dual":
         params = options.linear_solve(Hcurl_inner, dual_ele)
     elif name == "primal":
         params = options.linear_solve(primal_ele, H1_inner)
+        appctx["scale_h1_semi"] = 1
+
     pprint.pprint(params)
     for i in range(N):
 
         n = 2**(i + 2)
-        appctx = {"scale_Hcurl": 1. / Re}
+
         if space_dim == "2D":
             problem = Maxwell_2D(n, Re=Re)
         elif space_dim == "3D":
@@ -132,7 +136,6 @@ for name in schur:
                              f"currently give {space_dim}")
         maxwell_solver = solver.Solver(problem=problem,
                                        params=params,
-                                       schur_type=name,
                                        appctx=appctx)
         output_dict = maxwell_solver.solve(plot_sol)
 

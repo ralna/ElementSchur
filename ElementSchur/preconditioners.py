@@ -9,64 +9,60 @@ class MYPC(PCBase):
     needs_python_pmat = True
 
     def initialize(self, pc):
-
-        options_prefix = pc.getOptionsPrefix() + "custom_" + self.prefix + "_"
-
+        self.options_prefix = f"{pc.getOptionsPrefix()}custom_{self.prefix}_"
+        print(self.options_prefix)
         _, P = pc.getOperators()
         context = P.getPythonContext()
         appctx = self.get_appctx(pc)
         test, trial = context.a.arguments()
         appctx["V"] = test.function_space()
         if "state" in appctx and "velocity_space" in appctx:
-            u_k = split(appctx["state"])[appctx["velocity_space"]]
+            appctx["u_k"] = appctx["state"].split()[appctx["velocity_space"]]
 
-        a = appctx["a"] if "a" in appctx else self.schur_element_blocks(appctx)
-        S = self.schur_assemble(appctx)
+        problem = appctx["problem"]
+        linear_form = self.form(appctx, problem)
+        self.a = self.assemble_ele_schur(linear_form)
 
-        if not isinstance(S, list):
-            S = [S]
-
-        self.ksp = []
         bcs = appctx["bcs"] if "bcs" in appctx else context.row_bcs
 
-        for x, s in enumerate(S):
-            prefix = "{}{}_".format(options_prefix, x) \
-                if len(S) > 1 else options_prefix
-            print(prefix)
-            A = assemble(s, bcs=bcs,
-                         form_compiler_parameters=context.fc_params,
-                         mat_type="aij", options_prefix=prefix)
+        self.A = allocate_matrix(
+            self.a, bcs=bcs, form_compiler_parameters=context.fc_params,
+            mat_type="aij", options_prefix=self.options_prefix)
+        self._assemble_form = create_assembly_callable(
+            self.a, tensor=self.A, bcs=bcs,
+            form_compiler_parameters=context.fc_params, mat_type="aij")
 
-            ksp = PETSc.KSP().create(comm=pc.comm)
-            ksp.incrementTabLevel(1, parent=pc)
-            ksp.setOperators(A.petscmat)
-            ksp.setOptionsPrefix(options_prefix)
-            ksp.setFromOptions()
-            ksp.setUp()
-            self.ksp.append(ksp)
+        self._assemble_form()
+        self.ksp = self.setup_ksp(self.A.petscmat, pc)
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
+        raise NotImplementedError
+
+    def assemble_ele_schur(self, a):
         return a
 
-    def schur_element_blocks(self, appctx):
-        pass
-
     def update(self, pc):
-        pass
+        self._assemble_form()
+        self.ksp = self.setup_ksp(self.A.petscmat, pc)
 
     def apply(self, pc, x, y):
-        for ksp in self.ksp:
-            z = y.duplicate()
-            ksp.solve(x, z)
-            y.array += z.array
+        self.ksp.solve(x, y)
 
     applyTranspose = apply
 
     def view(self, pc, viewer=None):
         super(MYPC, self).view(pc, viewer)
         viewer.printfASCII(f"KSP solver for {self.prefix} preconditioner\n")
-        for ksp in self.ksp:
-            ksp.view()
+        ksp.view()
+
+    def setup_ksp(self, A, pc):
+        ksp = PETSc.KSP().create(comm=pc.comm)
+        ksp.incrementTabLevel(1, parent=pc)
+        ksp.setOperators(A)
+        ksp.setOptionsPrefix(self.options_prefix)
+        ksp.setFromOptions()
+        ksp.setUp()
+        return ksp
 
 
 class DualElementSchur(MYPC):
@@ -75,8 +71,8 @@ class DualElementSchur(MYPC):
         super(DualElementSchur, self).__init__()
         self.prefix = "dual"
 
-    def schur_assemble(self, appctx):
-        AA = Tensor(appctx["a"])
+    def assemble_ele_schur(self, linear_form):
+        AA = Tensor(linear_form)
         A = AA.blocks
         return A[1, 0] * A[0, 0].inv * A[0, 1]
 
@@ -87,31 +83,19 @@ class PrimalElementSchur(MYPC):
         super(PrimalElementSchur, self).__init__()
         self.prefix = "primal"
 
-    def schur_assemble(self, appctx):
-        AA = Tensor(appctx["a"])
+    def assemble_ele_schur(self, linear_form):
+        AA = Tensor(linear_form)
         A = AA.blocks
         return A[0, 0] + A[0, 1] * A[1, 1].inv * A[1, 0]
-
-
-class PrimalSchurInvElement(MYPC):
-
-    def __init__(self):
-        super(PrimalSchurInvElement, self).__init__()
-        self.prefix = "primal_dual"
-
-    def schur_assemble(self, appctx):
-        AA = Tensor(a)
-        A = AA.blocks
-        return [-A[1, 0] * A[0, 0].inv * A[0, 1], -A[1, 1]]
 
 
 class HcurlInner(MYPC):
 
     def __init__(self):
         super(HcurlInner, self).__init__()
-        self.prefix = "hcurl_inner"
+        self.prefix = "hcurl"
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
         V = appctx["V"]
         scale_Hcurl = appctx["scale_Hcurl"] if "scale_Hcurl" in appctx else 1
 
@@ -125,9 +109,9 @@ class HdivInner(MYPC):
 
     def __init__(self):
         super(HdivInner, self).__init__()
-        self.prefix = "hdiv_inner"
+        self.prefix = "hdiv"
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
         V = appctx["V"]
         scale_Hdiv = appctx["scale_Hdiv"] if "scale_Hdiv" in appctx else 1
 
@@ -141,9 +125,9 @@ class H1Inner(MYPC):
 
     def __init__(self):
         super(H1Inner, self).__init__()
-        self.prefix = "h1_inner"
+        self.prefix = "h1"
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
         V = appctx["V"]
         scale_l2 = appctx["scale_H1"] if "scale_l2" in appctx else 1
 
@@ -157,9 +141,9 @@ class H1SemiInner(MYPC):
 
     def __init__(self):
         super(H1SemiInner, self).__init__()
-        self.prefix = "h1_semi_inner"
+        self.prefix = "h1_semi"
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
         V = appctx["V"]
         scale = appctx["scale_h1_semi"] if "scale_h1_semi" in appctx else 1
         u = TrialFunction(V)
@@ -172,9 +156,9 @@ class L2Inner(MYPC):
 
     def __init__(self):
         super(L2Inner, self).__init__()
-        self.prefix = "l2_inner"
+        self.prefix = "l2"
 
-    def schur_assemble(self, appctx):
+    def form(self, appctx, problem):
         V = appctx["V"]
         scale = appctx["scale_l2"] if "scale_l2" in appctx else 1
 
