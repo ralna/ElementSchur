@@ -2,6 +2,7 @@ from firedrake import *
 
 from ElementSchur.problemclass import BaseProblem
 from ElementSchur.preconditioners import DualElementSchur
+from ElementSchur.preconditioners import PrimalElementSchur
 
 
 class Stokes(BaseProblem):
@@ -49,9 +50,24 @@ class StokesEleDual(DualElementSchur):
 
         eps = CellSize(problem.Z.mesh())**2
         a = (
-            -(1. / problem.Re) * inner(grad(u), grad(v)) * dx
-            - eps * inner(u, v) * dx
+            -(1. / problem.Re) * (inner(grad(u), grad(v)) * dx
+                                  + eps * inner(u, v) * dx)
             - p * div(v) * dx
             - q * div(u) * dx
+        )
+        return a
+
+
+class StokesElePrimal(PrimalElementSchur):
+
+    def form(self, appctx, problem):
+        u, p = TrialFunctions(problem.Z)
+        v, q = TestFunctions(problem.Z)
+
+        a = (
+            (1. / problem.Re) * inner(grad(u), grad(v)) * dx
+            - p * div(v) * dx
+            - q * div(u) * dx
+            + problem.Re * inner(p, q) * dx
         )
         return a
