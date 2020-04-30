@@ -2,20 +2,24 @@
 
 # This script was used to produce the results in the paper.
 
-# Running Maxwell examples
+echo "Running 2D Maxwell example:"
 python Maxwell/Maxwell.py -N 10 -Re 100; sleep 10
 
-# Running Stokes examples
+echo "Running 2D Stokes example:"
 python Stokes/Stokes_ldc.py -N 10 -Re 1000; sleep 10
 
-
-# Running Navier-Stokes examples
-
-# 2D
+echo "Running 2D Navier-Stokes examples:"
 python NavierStokes/NavierStokes_ldc.py -N 10 -Re 1; sleep 10
 python NavierStokes/NavierStokes_ldc.py -N 10 -Re 100; sleep 10
-
 python NavierStokes/NavierStokes_bfs.py -N 10 -Re 10; sleep 10
 
-# 3D
+
+echo "Running 3D Maxwell example:"
+python Maxwell/Maxwell.py -N 6 -Re 100 --space-dim 3D; sleep 10
+
+echo "Running 3D Stokes example:"
+python Stokes/Stokes_ldc.py -N 6 -Re 1000 --space-dim 3D; sleep 10
+
+echo "Running 3D Navier-Stokes examples:"
+python NavierStokes/NavierStokes_ldc.py -N 6 -Re 1 --space-dim 3D; sleep 10
 python NavierStokes/NavierStokes_ldc.py -N 6 -Re 100 --space-dim 3D; sleep 10
