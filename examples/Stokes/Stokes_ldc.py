@@ -4,7 +4,9 @@ import pprint
 
 from ElementSchur import solver, stokes, solver_options, utils
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(
+    description="An implementation of a cavity driven Stokes flow.",
+    add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
                     default=['dual', 'primal', 'riesz'],
                     help='Schur complement approximation type (default '

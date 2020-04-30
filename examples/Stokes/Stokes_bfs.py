@@ -6,7 +6,9 @@ import os
 
 from ElementSchur import solver, stokes, solver_options, utils
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(
+    description="An implementation of a backwards facing step Stokes flow",
+    add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
                     default=['dual', 'riesz'],
                     help='Schur complement approximation type (default '
@@ -40,7 +42,8 @@ class BFS_problem_2D(stokes.Stokes):
             mesh = Mesh(file_name)
         else:
             raise RuntimeError("Mesh file does not exsist, please run make "
-                               f"in {file_name}")
+                               f"in {file_name}. \nNeed to run make in "
+                               f"{self.mesh_path} to produce mesh files.")
         return mesh
 
     def nullspace(self, Z):

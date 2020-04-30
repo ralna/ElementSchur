@@ -6,11 +6,14 @@ import pprint
 
 from ElementSchur import solver, navier_stokes, solver_options, utils
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(
+    description="An implementation of a backwards facing step for "
+    "the Navier-Stokes equations",
+    add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
                     default=['dual', 'pcd'],
                     help='Schur complement approximation type (default '
-                    'dual reisz')
+                    'dual pcd')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -40,7 +43,8 @@ class BFS_problem_2D(navier_stokes.NavierStokes):
             mesh = Mesh(file_name)
         else:
             raise RuntimeError("Mesh file does not exsist, please run make "
-                               f"in {file_name}")
+                               f"in {file_name}. \nNeed to run make in "
+                               f"{self.mesh_path} to produce mesh files.")
         return mesh
 
     def nullspace(self, Z):

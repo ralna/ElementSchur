@@ -4,11 +4,14 @@ import pprint
 
 from ElementSchur import solver, navier_stokes, solver_options, utils
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(
+    description="An implementation of a cavity driven flow for "
+    "the Navier-Stokes equations",
+    add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
                     default=['dual', 'pcd'],
                     help='Schur complement approximation type (default '
-                    'dual reisz')
+                    'dual pcd')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,

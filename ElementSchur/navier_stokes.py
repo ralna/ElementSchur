@@ -48,7 +48,7 @@ class NavierStokesEleDual(DualElementSchur):
         u, p = TrialFunctions(problem.Z)
         v, q = TestFunctions(problem.Z)
 
-        eps = CellSize(problem.Z.mesh())**2
+        eps = 1e-6
         a = (
             -(1. / problem.Re) * inner(grad(u), grad(v)) * dx
             - inner(dot(grad(u), appctx["u_k"]), v) * dx

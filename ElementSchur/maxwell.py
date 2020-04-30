@@ -61,7 +61,7 @@ class MaxwellElePrimal(PrimalElementSchur):
         v, q = TestFunctions(problem.Z)
         scale = appctx["scale_h1_semi"] if "scale_h1_semi" in appctx else 1
 
-        eps = CellSize(problem.Z.mesh())**2
+        eps = 1e-6
         a = (
             (1. / problem.Re) * inner(curl(u), curl(v)) * dx
             + inner(v, grad(p)) * dx

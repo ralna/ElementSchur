@@ -4,11 +4,13 @@ import pprint
 
 from ElementSchur import solver, maxwell, solver_options, utils
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(
+    description="An implementation of the Mixed Maxwell's equations.",
+    add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
                     default=['dual', 'primal', 'riesz'],
                     help='Schur complement approximation type (default '
-                    'dual riesz')
+                    'dual primal riesz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,

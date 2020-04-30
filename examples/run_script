@@ -1,53 +1,21 @@
-# 2D
+#!/bin/bash
+
+# This script was used to produce the results in the paper.
+
 # Running Maxwell examples
-# python Maxwell/Maxwell.py -N 10 -Re 1; sleep 10
-# python Maxwell/Maxwell.py -N 10 -Re 10; sleep 10
 python Maxwell/Maxwell.py -N 10 -Re 100; sleep 10
 
 # Running Stokes examples
-# python Stokes/Stokes_ldc.py -N 10 -Re 1; sleep 10
-# python Stokes/Stokes_ldc.py -N 10 -Re 10; sleep 10
-# python Stokes/Stokes_ldc.py -N 10 -Re 100; sleep 10
 python Stokes/Stokes_ldc.py -N 10 -Re 1000; sleep 10
 
-# python Stokes/Stokes_bfs.py -N 10 -Re 1; sleep 10
-# python Stokes/Stokes_bfs.py -N 10 -Re 10; sleep 10
-python Stokes/Stokes_bfs.py -N 10 -Re 100; sleep 10
 
 # Running Navier-Stokes examples
-# python NavierStokes/NavierStokes_ldc.py -N 10 -Re 1; sleep 10
-python NavierStokes/NavierStokes_ldc.py -N 10 -Re 10; sleep 10
+
+# 2D
+python NavierStokes/NavierStokes_ldc.py -N 10 -Re 1; sleep 10
 python NavierStokes/NavierStokes_ldc.py -N 10 -Re 100; sleep 10
 
-# python NavierStokes/NavierStokes_bfs.py -N 10 -Re 1; sleep 10
 python NavierStokes/NavierStokes_bfs.py -N 10 -Re 10; sleep 10
 
-
-
 # 3D
-# Running Maxwell examples
-# python Maxwell/Maxwell.py -N 5 -Re 1 --space-dim 3D; sleep 10
-# python Maxwell/Maxwell.py -N 5 -Re 10 --space-dim 3D; sleep 10
-python Maxwell/Maxwell.py -N 5 -Re 100 --space-dim 3D; sleep 10
-
-# Running Stokes examples
-# python Stokes/Stokes_ldc.py -N 6 -Re 1 --space-dim 3D; sleep 10
-# python Stokes/Stokes_ldc.py -N 6 -Re 10 --space-dim 3D; sleep 10
-python Stokes/Stokes_ldc.py -N 6 -Re 1000 --space-dim 3D; sleep 10
-# python Stokes/Stokes_ldc.py -N 6 -Re 200 --space-dim 3D; sleep 10
-
-# python Stokes/Stokes_bfs.py -N 9 -Re 1 --space-dim 3D; sleep 10
-python Stokes/Stokes_bfs.py -N 9 -Re 10 --space-dim 3D; sleep 10
-# python Stokes/Stokes_bfs.py -N 9 -Re 50 --space-dim 3D; sleep 10
-
-
-# Running Navier-Stokes examples
-# python NavierStokes/NavierStokes_ldc.py -N 6 -Re 1 --space-dim 3D; sleep 10
-python NavierStokes/NavierStokes_ldc.py -N 6 -Re 10 --space-dim 3D; sleep 10
 python NavierStokes/NavierStokes_ldc.py -N 6 -Re 100 --space-dim 3D; sleep 10
-# python NavierStokes/NavierStokes_ldc.py -N 6 -Re 200 --space-dim 3D; sleep 10
-
-# python NavierStokes/NavierStokes_bfs.py -N 9 -Re 1 --space-dim 3D; sleep 10
-python NavierStokes/NavierStokes_bfs.py -N 9 -Re 10 --space-dim 3D; sleep 10
-# python NavierStokes/NavierStokes_bfs.py -N 9 -Re 50 --space-dim 3D; sleep 10
-
