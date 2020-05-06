@@ -1,12 +1,13 @@
 # Element Schur complement preconditioners
 
 This repository contains the code which produces the results for
-An element-based preconditioner for mixed finite element problems, Tyrone Rees and Michael Wathen, 2020
+*An element-based preconditioner for mixed finite element problems*, Tyrone Rees and Michael Wathen, 2020
 
 
 ## Install instructions
 
-The only external dependence is Firedrake, which can be installed following the instructions from https://www.firedrakeproject.org/download.html. This will install the default settings. Once Firedrake is installed correctly then this will create a new python environment that needs to be activated.
+The only external dependency is Firedrake, which can be installed following the instructions from https://www.firedrakeproject.org/download.html.  Once Firedrake is installed correctly then this will 
+create a new python environment that needs to be activated.
 
 To finish the installation, run
 `pip install .`
