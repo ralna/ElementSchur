@@ -2,6 +2,7 @@
 
 This repository contains the code which produces the results for
 *An element-based preconditioner for mixed finite element problems*, Tyrone Rees and Michael Wathen, 2020
+
 Code DOI: [![DOI](https://zenodo.org/badge/243001859.svg)](https://zenodo.org/badge/latestdoi/243001859)
 
 ## Install instructions
