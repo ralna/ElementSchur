@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
     "the Navier-Stokes equations",
     add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'pcd'],
+                    default=['dual', 'primal', 'pcd'],
                     help='Schur complement approximation type (default '
                     'dual pcd')
 parser.add_argument('-N', '--N', type=int, required=True,
@@ -113,6 +113,11 @@ options = solver_options.PETScOptions(solve_type=solve_type)
 
 dual_ele = options.custom_pc_amg(
     "ElementSchur.navier_stokes.NavierStokesEleDual", "dual")
+primal_ele = options.custom_pc_amg(
+    "ElementSchur.navier_stokes.NavierStokesElePrimal", "primal")
+L2_inner = options.custom_pc_amg("ElementSchur.preconditioners.L2Inner",
+                                 "l2_inner")
+
 pcd = options.pcd
 v_cycle_unassembled = options.v_cycle_unassembled
 
@@ -131,11 +136,13 @@ for name in schur:
     elif name == "dual":
         ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele,
                                             fact_type="full")
-
+    elif name == "primal":
+        ns_params = options.nonlinear_solve(primal_ele, L2_inner,
+                                            fact_type="full")
     pprint.pprint(ns_params)
     for i in range(N):
         # i += 1
-        appctx = {"velocity_space": 0, "Re": Re}
+        appctx = {"velocity_space": 0, "Re": Re, "scale_l2": -Re}
         if space_dim == "2D":
             problem = BFS_problem_2D(i, Re=Re)
         elif space_dim == "3D":
