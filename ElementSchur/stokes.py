@@ -45,16 +45,16 @@ class Stokes(BaseProblem):
 class StokesEleDual(DualElementSchur):
 
     def form(self, appctx, problem):
-        u, p = TrialFunctions(problem.Z)
-        v, q = TestFunctions(problem.Z)
+        mesh = problem.Z.mesh()
+        BDM = FunctionSpace(mesh, "BDM", 2)
+        DG = FunctionSpace(mesh, "CG", 1)
+        W = BDM * DG
 
-        eps = 1e-6
-        a = (
-            -(1. / problem.Re) * (inner(grad(u), grad(v)) * dx
-                                  + eps * inner(u, v) * dx)
-            - p * div(v) * dx
-            - q * div(u) * dx
-        )
+        sigma, u = TrialFunctions(W)
+        tau, v = TestFunctions(W)
+        a = ((1. / problem.Re) * (inner(sigma, tau)
+                                  + inner(div(sigma), div(tau)))
+             + div(tau) * u + div(sigma) * v) * dx
         return a
 
 
