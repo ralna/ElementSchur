@@ -58,6 +58,7 @@ class NavierStokesEleDual(DualElementSchur):
         )
         return a
 
+
 class NavierStokesElePrimal(PrimalElementSchur):
 
     def form(self, appctx, problem):
