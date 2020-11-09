@@ -10,9 +10,9 @@ parser = argparse.ArgumentParser(
     description="An implementation of a backwards facing step Stokes flow",
     add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'riesz'],
+                    default=['dual', 'dual_eps', 'primal', 'riesz'],
                     help='Schur complement approximation type (default '
-                    'dual riesz')
+                    'dual dual_eps primal riesz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -107,8 +107,11 @@ formatters = {'Time': '{:5.1f}',
               'Iteration': '{:5.0f}'}
 
 options = solver_options.PETScOptions(solve_type=solve_type)
-
+primal_ele = options.custom_pc_amg(
+    "ElementSchur.stokes.StokesElePrimal", "primal")
 dual_ele = options.custom_pc_amg("ElementSchur.stokes.StokesEleDual", "dual")
+dual_eps_ele = options.custom_pc_amg("ElementSchur.stokes.StokesEleDualEps",
+                                     "dual")
 L2_inner = options.custom_pc_amg("ElementSchur.preconditioners.L2Inner",
                                  "l2_inner")
 v_cycle_unassembled = options.v_cycle_unassembled
@@ -125,6 +128,10 @@ for name in schur:
         params = options.linear_solve(v_cycle_unassembled, L2_inner)
     elif name == "dual":
         params = options.linear_solve(v_cycle_unassembled, dual_ele)
+    elif name == "dual_eps":
+        params = options.linear_solve(v_cycle_unassembled, dual_eps_ele)
+    elif name == "primal":
+        params = options.linear_solve(primal_ele, L2_inner)
 
     pprint.pprint(params)
     for i in range(N):

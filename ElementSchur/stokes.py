@@ -58,6 +58,22 @@ class StokesEleDual(DualElementSchur):
         return a
 
 
+class StokesEleDualEps(DualElementSchur):
+
+    def form(self, appctx, problem):
+        eps = 1e-6
+        u, p = TrialFunctions(problem.Z)
+        v, q = TestFunctions(problem.Z)
+
+        a = (
+            (1. / problem.Re) * (inner(grad(u), grad(v))
+                                 + eps * inner(u, v)) * dx
+            - p * div(v) * dx
+            - q * div(u) * dx
+        )
+        return a
+
+
 class StokesElePrimal(PrimalElementSchur):
 
     def form(self, appctx, problem):
