@@ -57,15 +57,24 @@ class MaxwellEleDual(DualElementSchur):
 class MaxwellElePrimal(PrimalElementSchur):
 
     def form(self, appctx, problem):
-        u, p = TrialFunctions(problem.Z)
-        v, q = TestFunctions(problem.Z)
-        scale = appctx["scale_h1_semi"] if "scale_h1_semi" in appctx else 1
+        mesh = problem.Z.mesh()
+        N1 = FunctionSpace(mesh, "N1curl", 1)
+        HDiv = FunctionSpace(mesh, "BDM", 1)
+        W = MixedFunctionSpace([N1, HDiv])
 
-        eps = 1e-6
-        a = (
-            (1. / problem.Re) * inner(curl(u), curl(v)) * dx
-            + inner(v, grad(p)) * dx
-            + inner(u, grad(q)) * dx
-            + scale * inner(grad(p), grad(q)) * dx + eps * inner(p, q) * dx
-        )
+        sigma, u = TrialFunctions(W)
+        tau, v = TestFunctions(W)
+        dim = mesh.geometric_dimension()
+        if dim == 3:
+            a = ((1. / problem.Re) * dot(tau, sigma)
+                 - inner(curl(tau), u)
+                 + inner(curl(sigma), v)
+                 + dot(div(v), div(u)) + dot(v, u)) * dx
+        else:
+            a = (dot(tau, sigma)
+                 + curl(tau) * u[0]
+                 + curl(tau) * u[1]
+                 + curl(sigma) * v[0]
+                 + curl(sigma) * v[1]
+                 + problem.Re * (dot(div(v), div(u)) + dot(v, u))) * dx
         return a
