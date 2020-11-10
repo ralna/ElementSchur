@@ -23,10 +23,10 @@ mesh9:
 mesh10:
 	gmsh -2 -format msh2 -clscale 0.009 bfs_geometry.geo -algo meshadapt -o bfs_2d_10.msh -format msh2
 mesh11:
-	gmsh -2 -format msh2 -clscale 0.008 bfs_geometry.geo -algo meshadapt -o bfs_2d_10.msh -format msh2
+	gmsh -2 -format msh2 -clscale 0.008 bfs_geometry.geo -algo meshadapt -o bfs_2d_11.msh -format msh2
 mesh12:
-	gmsh -2 -format msh2 -clscale 0.007 bfs_geometry.geo -algo meshadapt -o bfs_2d_10.msh -format msh2
+	gmsh -2 -format msh2 -clscale 0.007 bfs_geometry.geo -algo meshadapt -o bfs_2d_12.msh -format msh2
 mesh13:
-	gmsh -2 -format msh2 -clscale 0.006 bfs_geometry.geo -algo meshadapt -o bfs_2d_10.msh -format msh2
+	gmsh -2 -format msh2 -clscale 0.006 bfs_geometry.geo -algo meshadapt -o bfs_2d_13.msh -format msh2
 mesh14:
-	gmsh -2 -format msh2 -clscale 0.005 bfs_geometry.geo -algo meshadapt -o bfs_2d_10.msh -format msh2
+	gmsh -2 -format msh2 -clscale 0.005 bfs_geometry.geo -algo meshadapt -o bfs_2d_14.msh -format msh2
