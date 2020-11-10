@@ -11,9 +11,9 @@ parser = argparse.ArgumentParser(
     "the Navier-Stokes equations",
     add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'primal', 'pcd'],
+                    default=['dual', 'dual_alt', 'primal', 'pcd'],
                     help='Schur complement approximation type (default '
-                    'dual pcd')
+                    'dual dual_alt primal pcd')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -113,6 +113,8 @@ options = solver_options.PETScOptions(solve_type=solve_type)
 
 dual_ele = options.custom_pc_amg(
     "ElementSchur.navier_stokes.NavierStokesEleDual", "dual")
+dual_ele_alt = options.custom_pc_amg(
+    "ElementSchur.navier_stokes.NavierStokesEleDualAlt", "dual")
 primal_ele = options.custom_pc_amg(
     "ElementSchur.navier_stokes.NavierStokesElePrimal", "primal")
 L2_inner = options.custom_pc_amg("ElementSchur.preconditioners.L2Inner",
@@ -135,6 +137,9 @@ for name in schur:
                                             fact_type="full")
     elif name == "dual":
         ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele,
+                                            fact_type="full")
+    elif name == "dual_alt":
+        ns_params = options.nonlinear_solve(v_cycle_unassembled, dual_ele_alt,
                                             fact_type="full")
     elif name == "primal":
         ns_params = options.nonlinear_solve(primal_ele, L2_inner,
