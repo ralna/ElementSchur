@@ -78,3 +78,17 @@ class MaxwellElePrimal(PrimalElementSchur):
                  + curl(sigma) * v[1]
                  + problem.Re * (dot(div(v), div(u)) + dot(v, u))) * dx
         return a
+
+class MaxwellElePrimalEps(PrimalElementSchur):
+
+    def form(self, appctx, problem):
+        eps = 1e-6
+        u, p = TrialFunctions(problem.Z)
+        v, q = TestFunctions(problem.Z)
+        a = (
+            (1. / problem.Re) * inner(curl(u), curl(v)) * dx
+            + inner(v, grad(p)) * dx
+            + inner(u, grad(q)) * dx
+            + (inner(grad(p), grad(q)) + eps * inner(p, q)) * dx
+        )
+        return a

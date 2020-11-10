@@ -8,9 +8,9 @@ parser = argparse.ArgumentParser(
     description="An implementation of the Mixed Maxwell's equations.",
     add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'primal', 'riesz'],
+                    default=['dual', 'primal', 'primal_eps', 'riesz'],
                     help='Schur complement approximation type (default '
-                    'dual primal riesz')
+                    'dual primal primal_eps riesz')
 parser.add_argument('-N', '--N', type=int, required=True,
                     help='Number of mesh levels')
 parser.add_argument('-Re', '--Re', type=float, default=1,
@@ -100,6 +100,8 @@ options = solver_options.PETScOptions(solve_type=solve_type)
 dual_ele = options.custom_pc_amg("ElementSchur.maxwell.MaxwellEleDual", "dual")
 primal_ele = options.custom_pc_direct(
     "ElementSchur.maxwell.MaxwellElePrimal", "primal")
+primal_ele_eps = options.custom_pc_direct(
+    "ElementSchur.maxwell.MaxwellElePrimalEps", "primal")
 
 Hcurl_inner = options.custom_pc_direct(
     "ElementSchur.preconditioners.HcurlInner", "hcurl")
@@ -122,7 +124,8 @@ for name in schur:
         params = options.linear_solve(Hcurl_inner, dual_ele)
     elif name == "primal":
         params = options.linear_solve(primal_ele, H1_inner)
-        appctx["scale_h1_semi"] = 1
+    elif name == "primal_eps":
+        params = options.linear_solve(primal_ele_eps, H1_inner)
 
     pprint.pprint(params)
     for i in range(N):
