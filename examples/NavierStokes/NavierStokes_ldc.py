@@ -127,7 +127,7 @@ for name in schur:
         n = 2**(i + 1)
         appctx = {"velocity_space": 0, "Re": Re, "scale_l2": -Re}
         if name == "pcd":
-            appctx["Re"] = -Re
+            appctx["Re"] = Re
         if space_dim == "2D":
             problem = LDC_problem_2D(n, Re=Re)
         elif space_dim == "3D":
