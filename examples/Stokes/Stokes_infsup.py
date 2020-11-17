@@ -26,7 +26,7 @@ def assemble_firedrake(dual_lin, bcs=[]):
     return matrix_scipy
 
 
-N = [2, 4, 8, 16, 32]
+N = [4]
 Re = 100.0
 dual_min = []
 dual_max = []
@@ -151,7 +151,7 @@ for n in N:
         plt.plot(e, "o", label="$\\mathcal{A}x = \\lambda \\mathcal{P}_1x$")
         e, _ = linalg.eig(K, P_dual_eps)
         e = np.sort(np.real(e))
-        plt.plot(e, "*", label="$\\mathcal{A}x = \\lambda \\mathcal{P}_2x$")
+        plt.plot(e, "x", label="$\\mathcal{A}x = \\lambda \\mathcal{P}_2x$")
         e, _ = linalg.eig(K, P_primal)
         e = np.sort(np.real(e))
         plt.plot(e, "+", label="$\\mathcal{A}x = \\lambda \\mathcal{P}_3x$")
