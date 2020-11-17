@@ -1,7 +1,8 @@
 from firedrake import *
 
 from ElementSchur.problemclass import BaseProblem
-from ElementSchur.preconditioners import DualElementSchur, PrimalElementSchur
+from ElementSchur.preconditioners import DualElementSchur, \
+    PrimalElementSchur, PrimalDual
 
 
 class NavierStokes(BaseProblem):
@@ -83,6 +84,24 @@ class NavierStokesElePrimal(PrimalElementSchur):
         a = (
             +(1. / problem.Re) * inner(grad(u), grad(v)) * dx
             + inner(dot(grad(u), appctx["u_k"]), v) * dx
+            - p * div(v) * dx
+            - q * div(u) * dx
+            + problem.Re * inner(p, q) * dx
+        )
+        return a
+
+
+class NavierStokesElePrimalDual(PrimalDual):
+
+    def form(self, appctx, problem):
+        u, p = TrialFunctions(problem.Z)
+        v, q = TestFunctions(problem.Z)
+        eps = 1e-6
+
+        a = (
+            -(1. / problem.Re) * inner(grad(u), grad(v)) * dx
+            - inner(dot(grad(u), appctx["u_k"]), v) * dx
+            - eps * inner(u, v) * dx
             - p * div(v) * dx
             - q * div(u) * dx
             + problem.Re * inner(p, q) * dx

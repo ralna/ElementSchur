@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
     "the Navier-Stokes equations",
     add_help=True)
 parser.add_argument('-s', '--schur', nargs='+',
-                    default=['dual', 'dual_alt', 'primal', 'pcd'],
+                    default=['dual', 'primal', 'primal_dual', 'pcd'],
                     help='Schur complement approximation type (default '
                     'dual dual_alt primal pcd')
 parser.add_argument('-N', '--N', type=int, required=True,
@@ -117,6 +117,8 @@ dual_ele_alt = options.custom_pc_amg(
     "ElementSchur.navier_stokes.NavierStokesEleDualAlt", "dual")
 primal_ele = options.custom_pc_amg(
     "ElementSchur.navier_stokes.NavierStokesElePrimal", "primal")
+primal_dual_ele = options.custom_pc_amg(
+    "ElementSchur.navier_stokes.NavierStokesElePrimalDual", "primal_dual")
 L2_inner = options.custom_pc_amg("ElementSchur.preconditioners.L2Inner",
                                  "l2_inner")
 
@@ -143,6 +145,9 @@ for name in schur:
                                             fact_type="full")
     elif name == "primal":
         ns_params = options.nonlinear_solve(primal_ele, L2_inner,
+                                            fact_type="full")
+    elif name == "primal_dual":
+        ns_params = options.nonlinear_solve(primal_ele, primal_dual_ele,
                                             fact_type="full")
     pprint.pprint(ns_params)
     for i in range(N):
