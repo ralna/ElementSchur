@@ -130,7 +130,7 @@ for name in schur:
     pprint.pprint(ns_params)
     for i in range(N):
         n = 2**(i + 1)
-        appctx = {"velocity_space": 0, "Re": Re, "scale_l2": Re}
+        appctx = {"velocity_space": 0, "Re": Re, "scale_l2": -Re}
         if name == "pcd":
             appctx["Re"] = Re
         if space_dim == "2D":
